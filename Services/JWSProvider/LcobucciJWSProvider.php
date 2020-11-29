@@ -111,7 +111,9 @@ class LcobucciJWSProvider implements JWSProviderInterface
             $payload[$claim->getName()] = $claim->getValue();
         }
 
-        return new LoadedJWS($payload, $this->verify($jws), null !== $this->ttl, $jws->getHeaders(), $this->clockSkew);
+        return new LoadedJWS($payload, $this->verify($jws), $jws->validate(new ValidationData(time() + $this->clockSkew)), null !== $this->ttl, $jws->getHeaders(), $this->clockSkew
+        );
+
     }
 
     private function getSignerForAlgorithm($signatureAlgorithm)
@@ -153,10 +155,6 @@ class LcobucciJWSProvider implements JWSProviderInterface
 
     private function verify(Token $jwt)
     {
-        if (!$jwt->validate(new ValidationData(time() + $this->clockSkew))) {
-            return false;
-        }
-
         if ($this->signer instanceof Hmac) {
             return $jwt->verify($this->signer, $this->keyLoader->loadKey(RawKeyLoader::TYPE_PRIVATE));
         }

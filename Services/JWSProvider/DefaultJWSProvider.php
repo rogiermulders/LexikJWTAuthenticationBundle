@@ -4,6 +4,8 @@ namespace Lexik\Bundle\JWTAuthenticationBundle\Services\JWSProvider;
 
 @trigger_error(sprintf('The "%s" class is deprecated since version 2.5 and will be removed in 3.0. Use "%s" or create your own "%s" implementation instead.', DefaultJWSProvider::class, LcobucciJWSProvider::class, JWSProviderInterface::class), E_USER_DEPRECATED);
 
+use Lcobucci\JWT\Parser;
+use Lcobucci\JWT\ValidationData;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\KeyLoader\KeyLoaderInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Signature\CreatedJWS;
 use Lexik\Bundle\JWTAuthenticationBundle\Signature\LoadedJWS;
@@ -108,10 +110,12 @@ class DefaultJWSProvider implements JWSProviderInterface
     public function load($token)
     {
         $jws = JWS::load($token, false, null, $this->cryptoEngine);
+        $parsed = (new Parser())->parse((string) $token);
 
         return new LoadedJWS(
             $jws->getPayload(),
             $jws->verify($this->keyLoader->loadKey('public'), $this->signatureAlgorithm),
+            $parsed->validate(new ValidationData(time() + $this->clockSkew)),
             null !== $this->ttl,
             $jws->getHeader(),
             $this->clockSkew

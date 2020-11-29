@@ -31,16 +31,16 @@ final class LoadedJWSTest extends TestCase
 
     public function testVerifiedWithEmptyPayload()
     {
-        $jws = new LoadedJWS($payload = [], true);
+        $jws = new LoadedJWS($payload = [], true, true);
 
         $this->assertSame($payload, $jws->getPayload());
-        $this->assertFalse($jws->isVerified());
-        $this->assertFalse($jws->isExpired());
+        $this->assertTrue($jws->isVerified());
+        $this->assertTrue($jws->isExpired());
     }
 
     public function testUnverifiedWithGoodPayload()
     {
-        $jws = new LoadedJWS($this->goodPayload, false);
+        $jws = new LoadedJWS($this->goodPayload, false, false);
 
         $this->assertSame($this->goodPayload, $jws->getPayload());
         $this->assertFalse($jws->isExpired());
@@ -49,7 +49,7 @@ final class LoadedJWSTest extends TestCase
 
     public function testVerifiedWithGoodPayload()
     {
-        $jws = new LoadedJWS($this->goodPayload, true);
+        $jws = new LoadedJWS($this->goodPayload, true, true);
 
         $this->assertSame($this->goodPayload, $jws->getPayload());
         $this->assertFalse($jws->isExpired());
@@ -61,9 +61,9 @@ final class LoadedJWSTest extends TestCase
         $payload = $this->goodPayload;
         $payload['exp'] -= 3600;
 
-        $jws = new LoadedJWS($payload, true);
+        $jws = new LoadedJWS($payload, true, true);
 
-        $this->assertFalse($jws->isVerified());
+        $this->assertTrue($jws->isVerified());
         $this->assertTrue($jws->isExpired());
     }
 
@@ -72,7 +72,7 @@ final class LoadedJWSTest extends TestCase
         $payload = $this->goodPayload;
         $payload['exp'] -= 3600;
 
-        $jws = new LoadedJWS($payload, true, true, [], 60);
+        $jws = new LoadedJWS($payload, true, true, true, [], 60);
 
         $this->assertTrue($jws->isVerified());
         $this->assertFalse($jws->isExpired());
@@ -83,9 +83,9 @@ final class LoadedJWSTest extends TestCase
         $payload = $this->goodPayload;
         $payload['iat'] += 3600;
 
-        $jws = new LoadedJWS($payload, true);
+        $jws = new LoadedJWS($payload, true, true);
 
-        $this->assertFalse($jws->isVerified());
+        $this->assertTrue($jws->isVerified());
         $this->assertFalse($jws->isExpired());
         $this->assertTrue($jws->isInvalid());
     }
@@ -95,7 +95,7 @@ final class LoadedJWSTest extends TestCase
         $payload = $this->goodPayload;
         $payload['iat'] += 3600;
 
-        $jws = new LoadedJWS($payload, true, true, [], 3660);
+        $jws = new LoadedJWS($payload, true, true, true, [], 3660);
 
         $this->assertTrue($jws->isVerified());
         $this->assertFalse($jws->isExpired());
@@ -114,7 +114,7 @@ final class LoadedJWSTest extends TestCase
             'iat'      => $timestamp,
         ];
 
-        $jws = new LoadedJWS($dstPayload, true);
+        $jws = new LoadedJWS($dstPayload, true, true);
 
         $this->assertFalse($jws->isExpired());
         $this->assertTrue($jws->isVerified());

@@ -29,7 +29,7 @@ class DefaultEncoderTest extends TestCase
             'exp'      => time() + 3600,
         ];
 
-        $loadedJWS   = new LoadedJWS($payload, true);
+        $loadedJWS   = new LoadedJWS($payload, true, true);
         $jwsProvider = $this->getJWSProviderMock();
         $jwsProvider
             ->expects($this->once())
@@ -85,7 +85,7 @@ class DefaultEncoderTest extends TestCase
         $jwsProvider
             ->expects($this->once())
             ->method('load')
-            ->willReturn(new LoadedJWS([], false));
+            ->willReturn(new LoadedJWS([], false, false));
 
         $encoder = new DefaultEncoder($jwsProvider);
         $encoder->decode('secrettoken');
@@ -99,7 +99,8 @@ class DefaultEncoderTest extends TestCase
         $this->expectException(JWTDecodeFailureException::class);
         $this->expectExceptionMessage('Expired JWT Token');
 
-        $loadedJWS   = new LoadedJWS(['exp' => time() - 3600], true);
+        $loadedJWS   = new LoadedJWS(['exp' => time() - 3600], true, true);
+        
         $jwsProvider = $this->getJWSProviderMock();
         $jwsProvider
             ->expects($this->once())
@@ -118,7 +119,7 @@ class DefaultEncoderTest extends TestCase
         $this->expectException(JWTDecodeFailureException::class);
         $this->expectExceptionMessage('Invalid JWT Token');
 
-        $loadedJWS   = new LoadedJWS(['exp' => time() + 3600, 'iat' => time() + 3600], true);
+        $loadedJWS   = new LoadedJWS(['exp' => time() + 3600, 'iat' => time() + 3600], true, true);
         $jwsProvider = $this->getJWSProviderMock();
         $jwsProvider
             ->expects($this->once())

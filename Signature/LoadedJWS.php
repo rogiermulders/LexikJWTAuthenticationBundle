@@ -10,12 +10,6 @@ namespace Lexik\Bundle\JWTAuthenticationBundle\Signature;
  */
 final class LoadedJWS
 {
-    const VERIFIED = 'verified';
-
-    const EXPIRED  = 'expired';
-
-    const INVALID  = 'invalid';
-
     /**
      * @var array
      */
@@ -25,12 +19,7 @@ final class LoadedJWS
      * @var array
      */
     private $payload;
-
-    /**
-     * @var string
-     */
-    private $state;
-
+    
     /**
      * @var int
      */
@@ -42,23 +31,38 @@ final class LoadedJWS
     private $hasLifetime;
 
     /**
+     * @var bool
+     */
+    private $isVerified;
+
+    /**
+     * @var bool
+     */
+    private $isValid;
+
+    /**
+     * @var bool
+     */
+    private $isExpired;
+
+    /**
      * @param array $payload
      * @param bool  $isVerified
+     * @param bool  $isValid
      * @param bool  $hasLifetime
      * @param int   $clockSkew
      * @param array $header
      */
-    public function __construct(array $payload, $isVerified, $hasLifetime = true, array $header = [], $clockSkew = 0)
+    public function __construct(array $payload, $isVerified, $isValid, $hasLifetime = true, array $header = [], $clockSkew = 0)
     {
         $this->payload     = $payload;
         $this->header      = $header;
         $this->hasLifetime = $hasLifetime;
         $this->clockSkew   = $clockSkew;
 
-        if (true === $isVerified) {
-            $this->state = self::VERIFIED;
-        }
-
+        $this->isVerified  = $isVerified;
+        $this->isValid     = $isValid;
+        
         $this->checkIssuedAt();
         $this->checkExpiration();
     }
@@ -84,7 +88,7 @@ final class LoadedJWS
      */
     public function isVerified()
     {
-        return self::VERIFIED === $this->state;
+        return $this->isVerified;
     }
 
     /**
@@ -92,9 +96,7 @@ final class LoadedJWS
      */
     public function isExpired()
     {
-        $this->checkExpiration();
-
-        return self::EXPIRED === $this->state;
+        return $this->isExpired;
     }
 
     /**
@@ -102,7 +104,7 @@ final class LoadedJWS
      */
     public function isInvalid()
     {
-        return self::INVALID === $this->state;
+        return !$this->isValid;
     }
 
     /**
@@ -110,17 +112,22 @@ final class LoadedJWS
      */
     private function checkExpiration()
     {
+        
+        
         if (!$this->hasLifetime) {
-            return;
+            return $this->isExpired = false;
         }
 
         if (!isset($this->payload['exp']) || !is_numeric($this->payload['exp'])) {
-            return $this->state = self::INVALID;
+            return $this->isExpired = true;
         }
 
         if ($this->clockSkew <= time() - $this->payload['exp']) {
-            $this->state = self::EXPIRED;
+            return $this->isExpired = true;
         }
+
+        // All good baby
+        return $this->isExpired = false;
     }
 
     /**
@@ -128,8 +135,10 @@ final class LoadedJWS
      */
     private function checkIssuedAt()
     {
+        
         if (isset($this->payload['iat']) && (int) $this->payload['iat'] - $this->clockSkew > time()) {
-            return $this->state = self::INVALID;
+            return $this->isValid = false;
         }
+
     }
 }
